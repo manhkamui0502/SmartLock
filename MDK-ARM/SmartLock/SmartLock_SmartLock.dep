@@ -1,5 +1,5 @@
 Dependencies for Project 'SmartLock', Target 'SmartLock': (DO NOT MODIFY !)
-F (startup_stm32f103xb.s)(0x64DC9559)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g-I.\RTE\_SmartLock-ID:\Keil_v5\ARM\CMSIS\5.4.0\CMSIS\Core\Include-ID:\Keil_v5\Keil\STM32F1xx_DFP\2.4.0\Device\Include--pd "__UVISION_VERSION SETA 526"--pd "_RTE_ SETA 1"--pd "STM32F10X_MD SETA 1"--list startup_stm32f103xb.lst--xref -o smartlock\startup_stm32f103xb.o--depend smartlock\startup_stm32f103xb.d)
+F (startup_stm32f103xb.s)(0x64DF41AA)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g-I.\RTE\_SmartLock-ID:\Keil_v5\ARM\CMSIS\5.4.0\CMSIS\Core\Include-ID:\Keil_v5\Keil\STM32F1xx_DFP\2.4.0\Device\Include--pd "__UVISION_VERSION SETA 526"--pd "_RTE_ SETA 1"--pd "STM32F10X_MD SETA 1"--list startup_stm32f103xb.lst--xref -o smartlock\startup_stm32f103xb.o--depend smartlock\startup_stm32f103xb.d)
 F (..\Core\Src\fonts.c)(0x64ABACEC)(-xc -std=c99 --target=arm-arm-none-eabi -mcpu=cortex-m3 -c-fno-rtti -funsigned-char -fshort-enums -fshort-wchar-D__EVAL -gdwarf-3 -Oz -ffunction-sections -w -I ../Core/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include-I./RTE/_SmartLock-ID:/Keil_v5/ARM/CMSIS/5.4.0/CMSIS/Core/Include-ID:/Keil_v5/Keil/STM32F1xx_DFP/2.4.0/Device/Include-D__UVISION_VERSION="526" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o smartlock/fonts.o -MD)
 I (..\Core\Inc\fonts.h)(0x64ABACF8)
 I (D:\Keil_v5\ARM\ARMCLANG\include\string.h)(0x5AB0C664)
@@ -174,10 +174,10 @@ I (..\Core\Inc\fonts.h)(0x64ABACF8)
 I (D:\Keil_v5\ARM\ARMCLANG\include\string.h)(0x5AB0C664)
 I (D:\Keil_v5\ARM\ARMCLANG\include\stdlib.h)(0x5AB0C660)
 I (D:\Keil_v5\ARM\ARMCLANG\include\stdio.h)(0x5AB0C664)
-I (..\Core\Inc\main.h)(0x64CA237C)
+I (..\Core\Inc\main.h)(0x64DF2B46)
 I (..\Core\Inc\mfrc522.h)(0x64AE6416)
-F (../Core/Src/main.c)(0x64DCA551)(-xc -std=c99 --target=arm-arm-none-eabi -mcpu=cortex-m3 -c-fno-rtti -funsigned-char -fshort-enums -fshort-wchar-D__EVAL -gdwarf-3 -Oz -ffunction-sections -w -I ../Core/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include-I./RTE/_SmartLock-ID:/Keil_v5/ARM/CMSIS/5.4.0/CMSIS/Core/Include-ID:/Keil_v5/Keil/STM32F1xx_DFP/2.4.0/Device/Include-D__UVISION_VERSION="526" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o smartlock/main.o -MD)
-I (..\Core\Inc\main.h)(0x64CA237C)
+F (../Core/Src/main.c)(0x64DF41DB)(-xc -std=c99 --target=arm-arm-none-eabi -mcpu=cortex-m3 -c-fno-rtti -funsigned-char -fshort-enums -fshort-wchar-D__EVAL -gdwarf-3 -Oz -ffunction-sections -w -I ../Core/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include-I./RTE/_SmartLock-ID:/Keil_v5/ARM/CMSIS/5.4.0/CMSIS/Core/Include-ID:/Keil_v5/Keil/STM32F1xx_DFP/2.4.0/Device/Include-D__UVISION_VERSION="526" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o smartlock/main.o -MD)
+I (..\Core\Inc\main.h)(0x64DF2B46)
 I (..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal.h)(0x649EA273)
 I (..\Core\Inc\stm32f1xx_hal_conf.h)(0x64B1010A)
 I (..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_rcc.h)(0x649EA273)
@@ -219,8 +219,8 @@ I (D:\Keil_v5\ARM\ARMCLANG\include\stdbool.h)(0x5AB0C668)
 I (..\Core\Inc\mfrc522.h)(0x64AE6416)
 I (..\Core\Inc\flash.h)(0x64B79874)
 I (..\Core\Inc\as608.h)(0x64D35344)
-F (../Core/Src/stm32f1xx_it.c)(0x64CA20E8)(-xc -std=c99 --target=arm-arm-none-eabi -mcpu=cortex-m3 -c-fno-rtti -funsigned-char -fshort-enums -fshort-wchar-D__EVAL -gdwarf-3 -Oz -ffunction-sections -w -I ../Core/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include-I./RTE/_SmartLock-ID:/Keil_v5/ARM/CMSIS/5.4.0/CMSIS/Core/Include-ID:/Keil_v5/Keil/STM32F1xx_DFP/2.4.0/Device/Include-D__UVISION_VERSION="526" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o smartlock/stm32f1xx_it.o -MD)
-I (..\Core\Inc\main.h)(0x64CA237C)
+F (../Core/Src/stm32f1xx_it.c)(0x64DF3D05)(-xc -std=c99 --target=arm-arm-none-eabi -mcpu=cortex-m3 -c-fno-rtti -funsigned-char -fshort-enums -fshort-wchar-D__EVAL -gdwarf-3 -Oz -ffunction-sections -w -I ../Core/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include-I./RTE/_SmartLock-ID:/Keil_v5/ARM/CMSIS/5.4.0/CMSIS/Core/Include-ID:/Keil_v5/Keil/STM32F1xx_DFP/2.4.0/Device/Include-D__UVISION_VERSION="526" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o smartlock/stm32f1xx_it.o -MD)
+I (..\Core\Inc\main.h)(0x64DF2B46)
 I (..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal.h)(0x649EA273)
 I (..\Core\Inc\stm32f1xx_hal_conf.h)(0x64B1010A)
 I (..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_rcc.h)(0x649EA273)
@@ -252,9 +252,9 @@ I (..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_spi.h)(0x649EA273)
 I (..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_tim.h)(0x649EA273)
 I (..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_tim_ex.h)(0x649EA273)
 I (..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_uart.h)(0x649EA273)
-I (..\Core\Inc\stm32f1xx_it.h)(0x64A296B4)
+I (..\Core\Inc\stm32f1xx_it.h)(0x64DF3D06)
 F (../Core/Src/stm32f1xx_hal_msp.c)(0x64DC90B7)(-xc -std=c99 --target=arm-arm-none-eabi -mcpu=cortex-m3 -c-fno-rtti -funsigned-char -fshort-enums -fshort-wchar-D__EVAL -gdwarf-3 -Oz -ffunction-sections -w -I ../Core/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include-I./RTE/_SmartLock-ID:/Keil_v5/ARM/CMSIS/5.4.0/CMSIS/Core/Include-ID:/Keil_v5/Keil/STM32F1xx_DFP/2.4.0/Device/Include-D__UVISION_VERSION="526" -D_RTE_ -DSTM32F10X_MD -DUSE_HAL_DRIVER -DSTM32F103xB-o smartlock/stm32f1xx_hal_msp.o -MD)
-I (..\Core\Inc\main.h)(0x64CA237C)
+I (..\Core\Inc\main.h)(0x64DF2B46)
 I (..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal.h)(0x649EA273)
 I (..\Core\Inc\stm32f1xx_hal_conf.h)(0x64B1010A)
 I (..\Drivers\STM32F1xx_HAL_Driver\Inc\stm32f1xx_hal_rcc.h)(0x649EA273)

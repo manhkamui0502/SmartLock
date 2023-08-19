@@ -411,12 +411,27 @@ void closeLock(){
 	}
 }
 
+
 void gotoSleep() {
 	SSD1306_Clear();
+	SSD1306_GotoXY(20, 30);
+	SSD1306_Puts("Zzzz....", &Font_7x10, 1);
+	SSD1306_UpdateScreen();
+	//Ham vao che do ngu, dua code che do ngu cua module vao day
+	
 	HAL_SuspendTick();
-	HAL_PWR_EnableSleepOnExit();
-//	  Enter Sleep Mode , wake up is done once User push-button is pressed
+	//Enter Sleep Mode , wake up is done once User push-button is pressed
 	HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+	HAL_ResumeTick();
+}
+
+//Thoat che do ngu
+void wakeup() {
+	SSD1306_Clear();
+	SSD1306_GotoXY(30, 20);
+	SSD1306_Puts("LOCKING", &Font_11x18, 1);
+	//Dua lenh thoat che do ngu vao day
+	SSD1306_UpdateScreen();
 }
 
 void handleInitialState() {
@@ -426,7 +441,7 @@ void handleInitialState() {
 	uint8_t temp;
 	uint32_t currentTime = HAL_GetTick();
 	while (1) {
-		if(HAL_GetTick() - currentTime > 5000){
+		if(HAL_GetTick() - currentTime > 10000){
 			SSD1306_Clear();
 			SSD1306_GotoXY(10, 20);
 			SSD1306_Puts("Going into SLEEP MODE", &Font_7x10, 1);
@@ -435,6 +450,8 @@ void handleInitialState() {
 			SSD1306_UpdateScreen();
 			HAL_Delay(1000);
 			gotoSleep();
+			currentTime = HAL_GetTick();
+			wakeup();
 		}else if(fingerprintValue == 0) {
 			SSD1306_Clear();
 			SSD1306_GotoXY(35,0);
@@ -704,7 +721,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-	KEYPAD3X4_Init(&KeyPad, KEYMAP, GPIOA, GPIO_PIN_4, GPIOA, GPIO_PIN_1, GPIOA, GPIO_PIN_0, 
+	KEYPAD3X4_Init(&KeyPad, KEYMAP, GPIOA, GPIO_PIN_4, GPIOA, GPIO_PIN_1, GPIOC, GPIO_PIN_15, 
 																	GPIOB, GPIO_PIN_1, GPIOB, GPIO_PIN_0,
 																	GPIOA, GPIO_PIN_6, GPIOA, GPIO_PIN_5);
 	
@@ -733,6 +750,7 @@ int main(void)
 	fingerValue = FLASH_ReadData32(startpage);
 	dataread = FLASH_ReadData32(PASSCODE_ADDR_PAGE);
 	fingerprintValue = (int)fingerValue;
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -1016,25 +1034,42 @@ static void MX_GPIO_Init(void)
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_4, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_15, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1|GPIO_PIN_4, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PA0 PA1 PA4 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_4;
+  /*Configure GPIO pin : PC15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_15;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PA0 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PA1 PA4 */
+  GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_4;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PA5 PA6 SensorPin_Pin */
-  GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_6|SensorPin_Pin;
+  /*Configure GPIO pins : PA5 PA6 SensorPin_Pin wakeUpPin_Pin */
+  GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_6|SensorPin_Pin|wakeUpPin_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -1051,6 +1086,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
