@@ -60,8 +60,6 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define SensorPin_Pin GPIO_PIN_7
 #define SensorPin_GPIO_Port GPIOA
-#define wakeUpPin_Pin GPIO_PIN_8
-#define wakeUpPin_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 

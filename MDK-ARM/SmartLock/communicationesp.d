@@ -1,6 +1,5 @@
-smartlock/stm32f1xx_hal_tim.o: \
-  ../Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_tim.c \
-  ../Drivers/STM32F1xx_HAL_Driver/Inc\stm32f1xx_hal.h \
+smartlock/communicationesp.o: CommunicationESP.c CommunicationESP.h \
+  ../Core/Inc\main.h ../Drivers/STM32F1xx_HAL_Driver/Inc\stm32f1xx_hal.h \
   ../Core/Inc\stm32f1xx_hal_conf.h \
   ../Drivers/STM32F1xx_HAL_Driver/Inc\stm32f1xx_hal_rcc.h \
   ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_def.h \
@@ -30,4 +29,7 @@ smartlock/stm32f1xx_hal_tim.o: \
   ../Drivers/STM32F1xx_HAL_Driver/Inc\stm32f1xx_hal_spi.h \
   ../Drivers/STM32F1xx_HAL_Driver/Inc\stm32f1xx_hal_tim.h \
   ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h \
-  ../Drivers/STM32F1xx_HAL_Driver/Inc\stm32f1xx_hal_uart.h
+  ../Drivers/STM32F1xx_HAL_Driver/Inc\stm32f1xx_hal_uart.h \
+  C:\Keil_v5\ARM\ARMCLANG\Bin\..\include\string.h \
+  C:\Keil_v5\ARM\ARMCLANG\Bin\..\include\stdlib.h \
+  C:\Keil_v5\ARM\ARMCLANG\Bin\..\include\stdio.h

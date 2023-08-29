@@ -5,6 +5,7 @@
 "smartlock\keypad.o"
 "smartlock\mfrc522.o"
 "smartlock\as608.o"
+"smartlock\communicationesp.o"
 "smartlock\main.o"
 "smartlock\stm32f1xx_it.o"
 "smartlock\stm32f1xx_hal_msp.o"

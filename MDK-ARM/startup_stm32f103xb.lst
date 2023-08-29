@@ -473,10 +473,11 @@ ARM Macro Assembler    Page 8
               00000000 
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M3 --depend=smar
 tlock\startup_stm32f103xb.d -osmartlock\startup_stm32f103xb.o -I.\RTE\_SmartLoc
-k -ID:\Keil_v5\ARM\CMSIS\5.4.0\CMSIS\Core\Include -ID:\Keil_v5\Keil\STM32F1xx_D
-FP\2.4.0\Device\Include --predefine="__EVAL SETA 1" --predefine="__UVISION_VERS
-ION SETA 526" --predefine="_RTE_ SETA 1" --predefine="STM32F10X_MD SETA 1" --li
-st=startup_stm32f103xb.lst startup_stm32f103xb.s
+k -I"C:\Users\MY PC\AppData\Local\Arm\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include"
+ -I"C:\Users\MY PC\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Incl
+ude" --predefine="__EVAL SETA 1" --predefine="__UVISION_VERSION SETA 526" --pre
+define="_RTE_ SETA 1" --predefine="STM32F10X_MD SETA 1" --list=startup_stm32f10
+3xb.lst startup_stm32f103xb.s
 
 
 

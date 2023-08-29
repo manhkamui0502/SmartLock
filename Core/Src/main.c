@@ -31,10 +31,9 @@
 #include "mfrc522.h"
 #include "flash.h"
 #include "as608.h"
-
+#include "CommunicationESP.h"
 /* USER CODE END Includes */
 
-/* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
 /* USER CODE END PTD */
@@ -42,16 +41,16 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define MAX_ATTEMPTS 3
-
 #define FLASH_ADDR_PAGE_62			0x0800F800	
 #define PASSCODE_ADDR_PAGE			0x0800F81A
 #define FLASH_ADDR_PAGE_63			0x0800FC00
 
 #define FLASH_USER_START_ADDR			FLASH_ADDR_PAGE_62
 #define FLASH_USER_END_ADDR 			FLASH_ADDR_PAGE_63 + FLASH_PAGE_SIZE
-
+extern uint8_t CheckedCode;
 uint32_t startpage = FLASH_USER_START_ADDR;
 uint32_t dataread, fingerValue;
+uint8_t UpdateCode;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -65,7 +64,7 @@ I2C_HandleTypeDef hi2c1;
 SPI_HandleTypeDef hspi2;
 
 TIM_HandleTypeDef htim2;
-
+UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
@@ -85,12 +84,12 @@ uint8_t CardID[5];
 uint8_t MyID[5] = {0x13, 0x0c, 0x0f, 0xec, 0xfc};
 KEYPAD_Name KeyPad;
 bool passcode_check, rfid_check, menu_check;
-
 uint16_t *tempF;
 char str[16];
 char inputText[29];
 char data[50] = {0};
-
+int test_wo = 0;
+int test_noupdate = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -101,8 +100,64 @@ static void MX_USART1_UART_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
-void    FLASH_PageErase(uint32_t PageAddress);
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+	  static uint8_t check = 0;
+	  static uint8_t state = 0;
+		if(huart->Instance == huart2.Instance){
+			  CheckedCode = 1;
+			  if(state == 1){
+				if(check == 1){
+				 if(UpdateCode == 'P'){
+	         NVIC_SystemReset();
+				 }
+				 else {
+					 check = 0;
+					 HAL_UART_Receive_IT(&huart2,&UpdateCode,1);
+				 }
+				}
+				else if(check == 0){
+					if(UpdateCode == 'U'){
+					check = 1;
+					}
+					if(UpdateCode == 'N'){
+					check = 2;
+					}
+					HAL_UART_Receive_IT(&huart2,&UpdateCode,1);
+				}
+				else if(check == 2){
+				  if(UpdateCode == 'O'){
+					test_noupdate ++;
+					check =0; state = 0; 
+					HAL_UART_Receive_IT(&huart2,&UpdateCode,1);
+					}
+					else {
+					check = 0;
+					HAL_UART_Receive_IT(&huart2,&UpdateCode,1);
+					}
+				}
+			}
+			else if(state == 0){
+			  if(check == 0){
+				if(UpdateCode == 'W')check = 1;
+					HAL_UART_Receive_IT(&huart2,&UpdateCode,1);
+				}
+				else {
+				if(UpdateCode == 'O'){
+					check = 0;
+					state = 1;
+					test_wo ++;
+					uint8_t IdentifyCode = 'A';
+					HAL_UART_Transmit(&huart2,&IdentifyCode,1,100);
+				}
+				else check =0;
+				HAL_UART_Receive_IT(&huart2,&UpdateCode,1);
+				}
+			}
+		}
+} 
+void  FLASH_PageErase(uint32_t PageAddress);
 typedef enum {
 	STATE_INITIAL,
 	STATE_FINGERPRINT,
@@ -128,7 +183,6 @@ void transitionToState(security_state_t nextState) {
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
 void FLASH_Write_Page(uint32_t passcodePage, uint32_t endPage, uint32_t data32, uint32_t fingerPage, uint32_t data) {
 	HAL_FLASH_Unlock();
 	FLASH_EraseInitTypeDef EraseInit;
@@ -280,6 +334,8 @@ void inputMNV(char a[]) {
 void setupDefaultPassword() {
 	if (readPassword(PASSCODE_ADDR_PAGE) == 0xFFFFFFFF) {
 		emptyfinger_database();
+		WakeUpESP();
+		EmptyDatabase();
 		uint32_t value = charArrayToUint32(original_passcode);
 		FLASH_Write_Page(PASSCODE_ADDR_PAGE, FLASH_USER_END_ADDR, value, startpage, 0x00);
 	}
@@ -294,6 +350,9 @@ bool check_password(char a[], char b[]) {
 
 void rfid(){
 	char szBuff[17];
+	SSD1306_Puts("ADMIN", &Font_7x10, 1);
+			SSD1306_GotoXY(10,50);
+			SSD1306_Puts("Tap your ID card!", &Font_7x10, 1);
 	while(true) {
 		if (TM_MFRC522_Check(CardID) == MI_OK){
 			SSD1306_Clear();
@@ -319,9 +378,9 @@ void rfid(){
 			}
 		} else {
 			SSD1306_GotoXY(20, 0);
-			SSD1306_Puts("ADMIN", &Font_7x10, 1);
+			//SSD1306_Puts("ADMIN", &Font_7x10, 1);
 			SSD1306_GotoXY(10,50);
-			SSD1306_Puts("Tap your ID card!", &Font_7x10, 1);
+			//SSD1306_Puts("Tap your ID card!", &Font_7x10, 1);
 			SSD1306_UpdateScreen();
 	 }
 	}
@@ -391,12 +450,6 @@ void passcode(){
 		}
 	}
 }
-
-uint8_t checkFinger(uint8_t f) {
-	f = getImage();
-	return f;
-}
-
 void openLock(){
 	int x;
 	for(x =250;x<1250;x++) {
@@ -411,29 +464,31 @@ void closeLock(){
 	}
 }
 
-
-void gotoSleep() {
+void gotoSleep(){
 	SSD1306_Clear();
 	SSD1306_GotoXY(20, 30);
 	SSD1306_Puts("Zzzz....", &Font_7x10, 1);
 	SSD1306_UpdateScreen();
+	//ControlLed(0);
 	//Ham vao che do ngu, dua code che do ngu cua module vao day
-	
+	if(SwitchSensorToSleepMode()!=0){
+		write_command("Fingerprint not sleep",strlen("Fingerprint not sleep"));
+		HAL_Delay(1000);
+	}
 	HAL_SuspendTick();
 	//Enter Sleep Mode , wake up is done once User push-button is pressed
 	HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
 	HAL_ResumeTick();
+	
 }
-
-//Thoat che do ngu
 void wakeup() {
 	SSD1306_Clear();
 	SSD1306_GotoXY(30, 20);
 	SSD1306_Puts("LOCKING", &Font_11x18, 1);
 	//Dua lenh thoat che do ngu vao day
+  //ControlLed(1);
 	SSD1306_UpdateScreen();
 }
-
 void handleInitialState() {
 	SSD1306_GotoXY(30, 20);
 	SSD1306_Puts("LOCKING", &Font_11x18, 1);
@@ -441,7 +496,7 @@ void handleInitialState() {
 	uint8_t temp;
 	uint32_t currentTime = HAL_GetTick();
 	while (1) {
-		if(HAL_GetTick() - currentTime > 10000){
+	    if(HAL_GetTick() - currentTime > 5000){
 			SSD1306_Clear();
 			SSD1306_GotoXY(10, 20);
 			SSD1306_Puts("Going into SLEEP MODE", &Font_7x10, 1);
@@ -451,8 +506,9 @@ void handleInitialState() {
 			HAL_Delay(1000);
 			gotoSleep();
 			currentTime = HAL_GetTick();
-			wakeup();
-		}else if(fingerprintValue == 0) {
+		  wakeup();
+			//TM_MFRC522_Init();
+		} else if(fingerprintValue == 0) {
 			SSD1306_Clear();
 			SSD1306_GotoXY(35,0);
 			SSD1306_Puts("No user!!", &Font_7x10, 1);
@@ -463,26 +519,32 @@ void handleInitialState() {
 			SSD1306_UpdateScreen();
 			HAL_Delay(1000);
 			transitionToState(MENU_CARD);
+			transitionToState(MENU_PASSCODE);
 			break;
-		} else if (checkFinger(temp) != FINGERPRINT_NOFINGER) {
+		} else if (checkFinger(temp)  == FINGERPRINT_OK) {
 			transitionToState(STATE_FINGERPRINT);
 			break;
 		} else if(TM_MFRC522_Check(CardID) == MI_OK){
+			//write_command("test",strlen("test"));
 			transitionToState(MENU_CARD);
 			break;
 		}		
-	}
+		HAL_Delay(50);
+ 	}
 }
-
-void handleFingerprintState() {
+void handleFingerprintState(){
 	SSD1306_GotoXY(0, 20);
-	SSD1306_Puts("FINGERPRINT", &Font_11x18, 1);
+	//SSD1306_Puts("Put Finger on sensor", &Font_11x18, 1);
 	SSD1306_UpdateScreen();
-	HAL_Delay(100);
+	//HAL_Delay(100);
 	uint8_t temp;
+	int f = 0;
+	//while(checkFinger(f)!=FINGERPRINT_OK)HAL_Delay(100);
 	temp = checkFingerPrintID(&tempF);
 	if (temp == 0) {
 		transitionToState(STATE_OPEN);
+		WakeUpESP();
+		AddTimeRecord(tempF);
 	} else {
 		transitionToState(STATE_INITIAL);
 	}
@@ -536,7 +598,6 @@ char* getName(user_t *user){
 char* getMnv(user_t *user){
 	return user->mnv;
 }
-
 void printUSER(user_t *a) {
 	char str[20];
 	SSD1306_Clear();
@@ -558,16 +619,40 @@ void printUSER(user_t *a) {
 
 void handleAddUser(){
 	fingerValue = FLASH_ReadData32(startpage);
+	fingerprintValue = (int)fingerValue;
 	dataread = FLASH_ReadData32(PASSCODE_ADDR_PAGE);
-	getFingerprintEnroll(find_avaiable_idex_table());
+	while(1){
+	if(getFingerprintEnroll(find_avaiable_idex_table()) == 0){
 	fingerprintValue = (int)fingerValue;
 	user_t user;
 	defineUser(&user);
+	WakeUpESP();
+	if(AddRecord(user.name,user.mnv,user.ID)!=0){
+		  write_command("Fail ADD USER",strlen("Fail ADD USER"));
+	}
+	else write_command("Success Update",strlen("Success Update"));
+	HAL_Delay(2000);
 	fingerprintValue++;
 	FLASH_Write_Page(PASSCODE_ADDR_PAGE, FLASH_USER_END_ADDR, dataread, startpage, fingerprintValue);
 	printUSER(&user);
+	break;
+	}
+	else {
+		if(fingerprintValue != 0){
+		write_command("Failed Enroll Finger",strlen("Failed Enroll Finger"));
+		HAL_Delay(1500);
+		transitionToState(MENU);
+		break;
+		}			
+	  else {
+		write_command("Failed Enroll Finger",strlen("Failed Enroll Finger"));
+		HAL_Delay(1000);
+		write_command("Preparing enroll again",strlen("Preparing enroll again"));
+		HAL_Delay(1000);
+		}
+	}
 }
-
+}
 void handleRemoveUser(){
 	SSD1306_Clear();
 	char str[100];
@@ -601,13 +686,16 @@ void handleRemoveUser(){
 		HAL_Delay(1000);
 	} else {
 			fingerID = (uint8_t)k;
-			if (deleteFingerprint(fingerID) == FINGERPRINT_OK) {
+			if (deleteFingerprint(fingerID) == FINGERPRINT_OK){
 				fingerprintValue--;
 				FLASH_Write_Page(PASSCODE_ADDR_PAGE, FLASH_USER_END_ADDR, dataread, startpage, fingerprintValue);
+				WakeUpESP();
+				if(RemoveRecord(fingerID)==0)write_command("Remove on database successfully",strlen("Remove on database successfully"));
+			  else write_command("Fail update on database",strlen("Fail update on database"));
+				HAL_Delay(2000);
 		}
 	}
 }
-	
 void handleCard(){
 	SSD1306_Clear();
 	rfid();
@@ -623,7 +711,38 @@ void handlePasscode() {
 		transitionToState(MENU_FINGERPRINT);
 	}
 }
-
+int handleEmpty(){
+	fingerprintValue = 0;
+	if(EmptyFlash(FLASH_ADDR_PAGE_62,1)!=HAL_OK){
+		 write_command("Empting flash failed",strlen("Empting flash failed"));
+		 return -1;
+	}
+	HAL_FLASH_Unlock();
+  HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,0x0800F800,fingerprintValue);
+  HAL_FLASH_Lock();
+	if(emptyfinger_database()!=0){
+	   write_command("Empty sensor failed",strlen("Empty sensor failed"));
+		 return -1;
+	}
+	write_command("Handling ...",strlen("Handling ..."));
+  WakeUpESP();
+	if(EmptyDatabase()==0){
+		write_command("Empty database success",strlen("Empty database success"));
+		HAL_FLASH_Unlock();
+    HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,0x0800F818,0x1111FFFF);
+	  HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,0x0800F81C,0xFFFF0011);
+    HAL_FLASH_Lock();
+	  transitionToState(STATE_INITIAL);
+		return 0;
+	}
+	else {
+		write_command("Failed empty database",strlen("Failed empty database"));
+		//transitionToState(MENU);
+		return -1;
+	}
+	HAL_Delay(2000);
+  
+}
 void handleMenu() {
 	char c;
 	SSD1306_Clear();
@@ -632,9 +751,11 @@ void handleMenu() {
 	SSD1306_UpdateScreen();
 	HAL_Delay(200);
 	c = KEYPAD3X4_Readkey(&KeyPad);
-	while(c != '#') {
-		SSD1306_GotoXY(20, 0);
+	int HaveEmptied = 0;
+	SSD1306_GotoXY(20, 0);
 		SSD1306_Puts("ADMIN", &Font_7x10, 1);
+		SSD1306_GotoXY(10, 10);
+		SSD1306_Puts("0.Empty Database", &Font_7x10, 1);
 		SSD1306_GotoXY(10, 20);
 		SSD1306_Puts("1.Change passcode", &Font_7x10, 1);
 		SSD1306_GotoXY(10, 30);
@@ -643,9 +764,16 @@ void handleMenu() {
 		SSD1306_Puts("3.Remove user", &Font_7x10, 1);
 		SSD1306_GotoXY(10, 50);
 		SSD1306_Puts("#.Exit", &Font_7x10, 1);
+	while(c != '#') {
+		if(HaveEmptied == 1)break;
 		SSD1306_UpdateScreen();
 		c = KEYPAD3X4_Readkey(&KeyPad);
 		switch (c) {
+			case '0':
+				if(handleEmpty()==0)HaveEmptied = 1;
+			  else write_command("Failed empty",strlen("Failed empty"));
+			  SSD1306_Clear();
+				break;
 			case '1':
 				handleChangePasscode();
 				SSD1306_Clear();
@@ -663,7 +791,6 @@ void handleMenu() {
 	SSD1306_Clear();
 	transitionToState(STATE_INITIAL);
 }
-
 void handleFingerprint(){
 	SSD1306_GotoXY(20, 0);
 	SSD1306_Puts("ADMIN", &Font_7x10, 1);
@@ -672,7 +799,6 @@ void handleFingerprint(){
 	SSD1306_UpdateScreen();
 	HAL_Delay(500);
 	uint8_t temp;
-	temp = checkFingerPrintID(&tempF);
 	int count  = 0;
 	fingerValue = FLASH_ReadData32(startpage);
 	dataread = FLASH_ReadData32(PASSCODE_ADDR_PAGE);
@@ -680,12 +806,18 @@ void handleFingerprint(){
 	if(fingerprintValue == 0) {
 		handleAddUser();
 		transitionToState(MENU);
-	} else {
+	} 
+	else {
+		int f =0;
+	  while(checkFinger(f)!=FINGERPRINT_OK)HAL_Delay(100);
+		temp = checkFingerPrintID(&tempF);
 		if (temp == 0) {
+			//WakeUpESP();
+			//HAL_UART_Transmit(&huart2,"This is a test\n",strlen("This is a test\n"),5000);
 			transitionToState(MENU);
-		} else {
-			while (count < 2) {
-				count ++;
+		} else if (temp == FINGERPRINT_NOTFOUND){
+			while (1) {
+				while(checkFinger(f)!=FINGERPRINT_OK)HAL_Delay(100);
 				temp = checkFingerPrintID(&tempF);
 				if (temp == 0) {
 					transitionToState(MENU);
@@ -694,8 +826,14 @@ void handleFingerprint(){
 					rfid_check = false;
 					passcode_check = false;
 					transitionToState(STATE_INITIAL);
+					break;
 				}
+				else if(temp == FINGERPRINT_NOTFOUND)count++;
 			}
+		}
+		else {
+		while(checkFinger(f)!=FINGERPRINT_OK)HAL_Delay(100);
+		temp = checkFingerPrintID(&tempF);
 		}
 	}
 }
@@ -709,6 +847,7 @@ void handleFingerprint(){
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+	//SCB->VTOR = 0x08004000;
 	passcode_check = false, rfid_check = false;
 	attempt = 0;
 	currentState = STATE_INITIAL;
@@ -724,7 +863,6 @@ int main(void)
 	KEYPAD3X4_Init(&KeyPad, KEYMAP, GPIOA, GPIO_PIN_4, GPIOA, GPIO_PIN_1, GPIOC, GPIO_PIN_15, 
 																	GPIOB, GPIO_PIN_1, GPIOB, GPIO_PIN_0,
 																	GPIOA, GPIO_PIN_6, GPIOA, GPIO_PIN_5);
-	
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -741,25 +879,44 @@ int main(void)
   MX_SPI2_Init();
   MX_TIM2_Init();
   MX_USART2_UART_Init();
+	MX_USART3_UART_Init();
+	//SSD1306_Puts("Put your finger", &Font_7x10, 1);
+	//WakeUpESP();
   /* USER CODE BEGIN 2 */
 	TM_MFRC522_Init();
 	SSD1306_Init();
 	HAL_TIM_Base_Start(&htim2);
 	HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_2);
+	checkPassword();
+	///ControlLed(1);
+  //getFingerprintEnroll(0);
+	//write_command("test",strlen("test"));
+	//find_avaiable_idex_table();
+	//checkPassword();
+	//WakeUpESP();
+	//transitionToState(MENU);
 	setupDefaultPassword();
 	fingerValue = FLASH_ReadData32(startpage);
 	dataread = FLASH_ReadData32(PASSCODE_ADDR_PAGE);
 	fingerprintValue = (int)fingerValue;
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	uint16_t testt;
-	
+	HAL_UART_Receive_IT(&huart2,&UpdateCode,1); // UART2 interrupt receive for FOTA 
+	//handleFingerprint();
+	//handleMenu();
+	//find_avaiable_idex_table();
+	//getFingerprintEnroll(1);
+  //test_function(1);
+	//checkFingerPrintID(&testt);
+  //mptyDatabase();
+	//currentState = MENU;
+  //currentState = MENU;
   while (1)
   {
-		switch (currentState) {
+		 switch (currentState) {
 			case STATE_INITIAL:
 					handleInitialState();
 					break;
@@ -780,8 +937,8 @@ int main(void)
 					break;
 			case MENU:
 					handleMenu();
-					break; 
-		}
+					break;    
+		}  
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -969,12 +1126,11 @@ static void MX_USART1_UART_Init(void)
   /* USER CODE END USART1_Init 0 */
 
   /* USER CODE BEGIN USART1_Init 1 */
-	huart1.Init.BaudRate = 57600;
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
   huart1.Init.BaudRate = 57600;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
-  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.StopBits = UART_STOPBITS_2;
   huart1.Init.Parity = UART_PARITY_NONE;
   huart1.Init.Mode = UART_MODE_TX_RX;
   huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
@@ -1005,7 +1161,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
+  huart2.Init.BaudRate = 38400;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -1019,6 +1175,33 @@ static void MX_USART2_UART_Init(void)
   /* USER CODE BEGIN USART2_Init 2 */
 
   /* USER CODE END USART2_Init 2 */
+
+}
+static void MX_USART3_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART3_Init 0 */
+
+  /* USER CODE END USART3_Init 0 */
+
+  /* USER CODE BEGIN USART3_Init 1 */
+
+  /* USER CODE END USART3_Init 1 */
+  huart3.Instance = USART3;
+  huart3.Init.BaudRate = 115200;
+  huart3.Init.WordLength = UART_WORDLENGTH_8B;
+  huart3.Init.StopBits = UART_STOPBITS_1;
+  huart3.Init.Parity = UART_PARITY_NONE;
+  huart3.Init.Mode = UART_MODE_TX_RX;
+  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART3_Init 2 */
+
+  /* USER CODE END USART3_Init 2 */
 
 }
 
@@ -1068,8 +1251,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PA5 PA6 SensorPin_Pin wakeUpPin_Pin */
-  GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_6|SensorPin_Pin|wakeUpPin_Pin;
+  /*Configure GPIO pins : PA5 PA6 SensorPin_Pin */
+  GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_6|SensorPin_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -1086,7 +1269,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
+	
+	GPIO_InitStruct.Pin = GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET); // GPIO Pin setting for waking up ESP8266  
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI0_IRQn);
