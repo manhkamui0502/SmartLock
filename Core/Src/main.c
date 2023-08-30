@@ -753,17 +753,17 @@ void handleMenu() {
 	c = KEYPAD3X4_Readkey(&KeyPad);
 	int HaveEmptied = 0;
 	SSD1306_GotoXY(20, 0);
-		SSD1306_Puts("ADMIN", &Font_7x10, 1);
-		SSD1306_GotoXY(10, 10);
-		SSD1306_Puts("0.Empty Database", &Font_7x10, 1);
-		SSD1306_GotoXY(10, 20);
-		SSD1306_Puts("1.Change passcode", &Font_7x10, 1);
-		SSD1306_GotoXY(10, 30);
-		SSD1306_Puts("2.Add user", &Font_7x10, 1);
-		SSD1306_GotoXY(10, 40);
-		SSD1306_Puts("3.Remove user", &Font_7x10, 1);
-		SSD1306_GotoXY(10, 50);
-		SSD1306_Puts("#.Exit", &Font_7x10, 1);
+	SSD1306_Puts("ADMIN", &Font_7x10, 1);
+	SSD1306_GotoXY(10, 10);
+	SSD1306_Puts("0.Empty Database", &Font_7x10, 1);
+	SSD1306_GotoXY(10, 20);
+	SSD1306_Puts("1.Change passcode", &Font_7x10, 1);
+	SSD1306_GotoXY(10, 30);
+	SSD1306_Puts("2.Add user", &Font_7x10, 1);
+	SSD1306_GotoXY(10, 40);
+	SSD1306_Puts("3.Remove user", &Font_7x10, 1);
+	SSD1306_GotoXY(10, 50);
+	SSD1306_Puts("#.Exit", &Font_7x10, 1);
 	while(c != '#') {
 		if(HaveEmptied == 1)break;
 		SSD1306_UpdateScreen();
