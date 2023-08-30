@@ -18,12 +18,10 @@ uint8_t TM_SPI_Send(uint8_t data)
 
 void TM_MFRC522_Init(void) {
 	TM_MFRC522_Reset();
-
 	TM_MFRC522_WriteRegister(MFRC522_REG_T_MODE, 0x8D);
 	TM_MFRC522_WriteRegister(MFRC522_REG_T_PRESCALER, 0x3E);
 	TM_MFRC522_WriteRegister(MFRC522_REG_T_RELOAD_L, 30);           
 	TM_MFRC522_WriteRegister(MFRC522_REG_T_RELOAD_H, 0);
-
 	/* 48dB gain */
 	TM_MFRC522_WriteRegister(MFRC522_REG_RF_CFG, 0x70);
 	
