@@ -158,6 +158,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 		}
 } 
 void  FLASH_PageErase(uint32_t PageAddress);
+
 typedef enum {
 	STATE_INITIAL,
 	STATE_FINGERPRINT,
@@ -168,6 +169,7 @@ typedef enum {
 	MENU
 } security_state_t;
 security_state_t currentState;
+
 const char KEYMAP[NUMROWS][NUMCOLS] = {
 		{'1','2','3'},
 		{'4','5','6'}, 
@@ -287,13 +289,6 @@ void inputPasscodeWithText(char s[]) {
 				case '#':
 					i = 29;
 					break;
-//				case '*':
-//					i = 0;
-//					name[0] = '\0';
-//					x = 10;
-//					k = '\0';
-//					SSD1306_Clear();
-//					break;
 			}
 			name[i] = (char)k;
 			SSD1306_GotoXY(x, 30);
@@ -329,7 +324,6 @@ void inputMNV(char a[]) {
 		}
 	}
 }
-
 
 void setupDefaultPassword() {
 	if (readPassword(PASSCODE_ADDR_PAGE) == 0xFFFFFFFF) {
@@ -469,8 +463,6 @@ void gotoSleep(){
 	SSD1306_GotoXY(20, 30);
 	SSD1306_Puts("Zzzz....", &Font_7x10, 1);
 	SSD1306_UpdateScreen();
-	//ControlLed(0);
-	//Ham vao che do ngu, dua code che do ngu cua module vao day
 	if(SwitchSensorToSleepMode()!=0){
 		write_command("Fingerprint not sleep",strlen("Fingerprint not sleep"));
 		HAL_Delay(1000);
@@ -485,8 +477,6 @@ void wakeup() {
 	SSD1306_Clear();
 	SSD1306_GotoXY(30, 20);
 	SSD1306_Puts("LOCKING", &Font_11x18, 1);
-	//Dua lenh thoat che do ngu vao day
-  //ControlLed(1);
 	SSD1306_UpdateScreen();
 }
 void handleInitialState() {
@@ -507,7 +497,6 @@ void handleInitialState() {
 			gotoSleep();
 			currentTime = HAL_GetTick();
 		  wakeup();
-			//TM_MFRC522_Init();
 		} else if(fingerprintValue == 0) {
 			SSD1306_Clear();
 			SSD1306_GotoXY(35,0);
@@ -519,13 +508,11 @@ void handleInitialState() {
 			SSD1306_UpdateScreen();
 			HAL_Delay(1000);
 			transitionToState(MENU_CARD);
-			transitionToState(MENU_PASSCODE);
 			break;
 		} else if (checkFinger(temp)  == FINGERPRINT_OK) {
 			transitionToState(STATE_FINGERPRINT);
 			break;
 		} else if(TM_MFRC522_Check(CardID) == MI_OK){
-			//write_command("test",strlen("test"));
 			transitionToState(MENU_CARD);
 			break;
 		}		
